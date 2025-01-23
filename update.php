@@ -26,8 +26,35 @@ try {
         $updateFields[] = "`price` = '$price'";
     }
 
+    // ตรวจสอบว่าได้รับค่า quantity และเพิ่มในคำสั่ง SQL หากมี
+    if (!empty($dataJSON['quantity'])) {
+        $quantity = $dataJSON['quantity'];
+        $updateFields[] = "`quantity` = '$quantity'";
+    }
+
+    // ตรวจสอบว่าได้รับค่า type และเพิ่มในคำสั่ง SQL หากมี
+    if (!empty($dataJSON['type'])) {
+        $type = $dataJSON['type'];
+        $updateFields[] = "`type` = '$type'";
+    }
+
     // ตรวจสอบว่ามีการอัปโหลดรูปภาพใหม่หรือไม่
     if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
+        // ดึงชื่อไฟล์รูปภาพเก่าจากฐานข้อมูล
+        $sqlSelect = "SELECT `image` FROM `products` WHERE `id` = '$id'";
+        $result = mysqli_query($conn, $sqlSelect);
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $oldImagePath = $row['image'];
+
+            // ลบรูปภาพเก่าถ้ามี
+            if (!empty($oldImagePath) && file_exists($oldImagePath)) {
+                unlink($oldImagePath);
+            }
+        }
+
+        // บันทึกรูปภาพใหม่
         $image = $_FILES['image'];
         $imagePath = 'upload/' . basename($image['name']);
 
